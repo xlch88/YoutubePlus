@@ -1,0 +1,5 @@
+{
+	"dependencies": {
+		"@types/tampermonkey": "^5.0.4"
+	}
+}
