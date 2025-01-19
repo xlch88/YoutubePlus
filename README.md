@@ -12,7 +12,7 @@
 
 请自行百毒或者咕歌“油猴脚本如何安装”
 
-此处是安装链接：https://greasyfork.org/zh-CN/scripts/486375-youtube%E7%9C%9F%E6%AD%A3100-%E9%9F%B3%E9%87%8F
+此处是安装链接: https://greasyfork.org/zh-CN/scripts/486375
 
 # 功能
 ## 优化音量条

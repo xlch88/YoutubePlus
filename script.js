@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         YoutubePlus
-// @namespace    https://github.com/xlch88/Youtube-Plus
+// @name         YoutubePlus - 100%音量增强/一键倍速按钮/自动切换Premium画质/删除迷你播放器按钮
+// @namespace    https://github.com/xlch88/YoutubePlus
 // @author       Dark495 (https://dark495.me/)
 // @version      2025-01-19
 // @license      WTFPL
@@ -12,6 +12,7 @@
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_openInTab
 // ==/UserScript==
 
 (function () {
@@ -52,7 +53,7 @@
 
 		menuIds.push(
 			GM_registerMenuCommand(`😘 当前版本 ${GM_info.script.version}`, function () {
-				window.GM_openInTab("https://baidu.com", {
+				window.GM_openInTab("https://greasyfork.org/zh-CN/scripts/486375", {
 					active: true,
 					insert: true,
 					setParent: true,
