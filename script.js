@@ -2,7 +2,7 @@
 // @name         YoutubePlus - 100%音量增强/一键倍速按钮/自动切换Premium画质/删除迷你播放器按钮
 // @namespace    https://github.com/xlch88/YoutubePlus
 // @author       Dark495 (https://dark495.me/)
-// @version      2025-01-19
+// @version      2025-01-19.3
 // @license      WTFPL
 // @description  增强Youtube使用体验
 // @author       Dark495
@@ -21,6 +21,7 @@
 	let player;
 	let volumePanel;
 	let volumeSlider;
+	let commentWatcher;
 
 	const functions = {
 		maxVolume: {
@@ -37,6 +38,10 @@
 		},
 		hidePiPButton: {
 			name: "隐藏画中画/迷你播放器按钮",
+			enable: true,
+		},
+		showNickname: {
+			name: "显示评论者昵称",
 			enable: true,
 		},
 	};
@@ -103,9 +108,134 @@
 					document.querySelector(".ytp-size-button").style.display = "";
 				}
 				break;
+
+			case "showNickname":
+				if (functions.showNickname.enable) {
+					registerCommentWatcher();
+				} else {
+					commentWatcher.disconnect();
+					commentWatcher = null;
+				}
 		}
 
 		registerMenu();
+	}
+
+	if (!document.querySelector("style.youtube-plus-style")) {
+		const speedButtonSvg = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1737240990275" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4235" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200"><path d="M512 512a53.44 53.44 0 0 1-17.4 39.413333L131.933333 882a52.833333 52.833333 0 0 1-35.713333 14 53.84 53.84 0 0 1-21.76-4.666667A52.666667 52.666667 0 0 1 42.666667 842.593333V181.406667A53.333333 53.333333 0 0 1 131.926667 142l362.666666 330.6A53.44 53.44 0 0 1 512 512z m451.933333-39.413333L601.26 142A53.333333 53.333333 0 0 0 512 181.406667v661.186666a52.666667 52.666667 0 0 0 31.793333 48.793334 53.84 53.84 0 0 0 21.76 4.666666 52.833333 52.833333 0 0 0 35.713334-14l362.666666-330.6a53.333333 53.333333 0 0 0 0-78.826666z" fill="#ffffff" p-id="4236"></path></svg>`;
+		const style = document.createElement("style");
+		style.className = "youtube-plus-style";
+		style.textContent = `
+			div.ytp-speed-button{
+				display:flex;
+			}
+			span.ytp-speed-button{
+				width: 48px;
+				height: 48px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				position: relative;
+				cursor: pointer;
+			}
+			span.ytp-speed-button::before{
+				content: "";
+				background:url('data:image/svg+xml;utf8,${encodeURIComponent(speedButtonSvg)}');
+				width: 20px;
+				height: 20px;
+				background-size: contain;
+			}
+			span.ytp-speed-button::after{
+				content: "1x";
+				position: absolute;
+				top: -7px;
+				left: 28px;
+				font-size: 12px;
+				transform: scale(0.8);
+				color: white;
+				pointer-events: none;
+				text-align: left;
+			}
+			span.ytp-speed-button-active::after{
+				color: red;
+			}
+			span.ytp-speed-button-05x::after{
+				content: "0.5x";
+			}
+			span.ytp-speed-button-1x::after{
+				content: "1x";
+			}
+			span.ytp-speed-button-15x::after{
+				content: "1.5x";
+			}
+			span.ytp-speed-button-2x::after{
+				content: "2x";
+			}
+			
+			.yt-plus-nickname{ color: #0f0f0f; }
+			.yt-plus-username{ color: rgba(0, 0, 0, 0.4); margin-left: 5px; }
+			ytd-author-comment-badge-renderer[creator] .yt-plus-nickname{ color:unset; }
+			ytd-author-comment-badge-renderer[creator] .yt-plus-username{ color:unset; opacity: 0.4; }
+		`;
+		document.head.appendChild(style);
+	}
+
+	// =====================================================================================================
+
+	function registerCommentWatcher() {
+		if (commentWatcher) {
+			commentWatcher.disconnect();
+		}
+
+		commentWatcher = new MutationObserver((mutationsList, observer) => {
+			for (const mutation of mutationsList) {
+				if (mutation.type === "childList") {
+					mutation.addedNodes.forEach((v) => {
+						if (v?.tagName?.toLowerCase() === "ytd-comment-view-model") {
+							let author = v.querySelector("#author-comment-badge"),
+								url,
+								username;
+							if (author && author.childElementCount > 0) {
+								url = author.querySelector("a#name").href;
+								username = author.querySelector("yt-formatted-string").title;
+								author = author.querySelector("yt-formatted-string");
+							} else {
+								author = v.querySelector("#author-text");
+								url = author.href;
+								username = author.querySelector("span").innerText.trim();
+							}
+
+							fetch(url)
+								.then((v) => {
+									return v.text();
+								})
+								.then((v) => {
+									const result = /<meta property="og:title" content="(.*?)">/.exec(v);
+									if (result) {
+										const nicknameNode = document.createElement("span");
+										nicknameNode.textContent = result[1];
+										nicknameNode.className = "yt-plus-nickname";
+
+										const usernameNode = document.createElement("span");
+										usernameNode.textContent = username;
+										usernameNode.className = "yt-plus-username";
+
+										author.replaceChildren(nicknameNode, usernameNode);
+									}
+								})
+								.catch((e) => {
+									console.log("change name error", e);
+								});
+						}
+					});
+				}
+			}
+		});
+
+		commentWatcher.observe(document.querySelector("ytd-comments #contents"), {
+			childList: true,
+			subtree: true,
+		});
 	}
 
 	function hidePiPButton() {
@@ -154,16 +284,16 @@
 		if (!nowQuality.includes("Premium") && Object.keys(qualityList).includes(`${nowQuality} Premium`)) {
 			openQualityList();
 			document.querySelector(".ytp-quality-menu .ytp-panel-menu").childNodes[qualityList[`${nowQuality} Premium`]].click();
+		} else {
+			document.querySelector(".ytp-settings-button").click();
+			if (document.querySelector(".ytp-tooltip")) document.querySelector(".ytp-tooltip").style.display = "none";
 		}
 	}
 
 	function addSpeedButton() {
 		if (document.querySelector(".ytp-speed-button")) return;
 
-		const speedButtonSvg = `<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1737240990275" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4235" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200"><path d="M512 512a53.44 53.44 0 0 1-17.4 39.413333L131.933333 882a52.833333 52.833333 0 0 1-35.713333 14 53.84 53.84 0 0 1-21.76-4.666667A52.666667 52.666667 0 0 1 42.666667 842.593333V181.406667A53.333333 53.333333 0 0 1 131.926667 142l362.666666 330.6A53.44 53.44 0 0 1 512 512z m451.933333-39.413333L601.26 142A53.333333 53.333333 0 0 0 512 181.406667v661.186666a52.666667 52.666667 0 0 0 31.793333 48.793334 53.84 53.84 0 0 0 21.76 4.666666 52.833333 52.833333 0 0 0 35.713334-14l362.666666-330.6a53.333333 53.333333 0 0 0 0-78.826666z" fill="#ffffff" p-id="4236"></path></svg>`;
-
 		const controls = document.getElementsByClassName("ytp-left-controls")[0];
-
 		let speedButtonActive = 0;
 		try {
 			speedButtonActive = parseFloat(JSON.parse(sessionStorage.getItem("yt-player-playback-rate")).data);
@@ -194,58 +324,6 @@
 			speedButtons.push(speedButton);
 		}
 		controls.parentNode.insertBefore(speedButtonDiv, controls.nextSibling);
-
-		const style = document.createElement("style");
-		style.className = "speed-button";
-		style.textContent = `
-			div.ytp-speed-button{
-				display:flex;
-			}
-			span.ytp-speed-button{
-				width: 48px;
-				height: 48px;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				position: relative;
-				cursor: pointer;
-			}
-
-			span.ytp-speed-button::before{
-				content: "";
-				background:url('data:image/svg+xml;utf8,${encodeURIComponent(speedButtonSvg)}');
-				width: 20px;
-				height: 20px;
-				background-size: contain;
-			}
-			span.ytp-speed-button::after{
-				content: "1x";
-				position: absolute;
-				top: -7px;
-				left: 28px;
-				font-size: 12px;
-				transform: scale(0.8);
-				color: white;
-				pointer-events: none;
-				text-align: left;
-			}
-			span.ytp-speed-button-active::after{
-				color: red;
-			}
-			span.ytp-speed-button-05x::after{
-				content: "0.5x";
-			}
-			span.ytp-speed-button-1x::after{
-				content: "1x";
-			}
-			span.ytp-speed-button-15x::after{
-				content: "1.5x";
-			}
-			span.ytp-speed-button-2x::after{
-				content: "2x";
-			}
-		`;
-		document.head.appendChild(style);
 	}
 
 	setInterval(() => {
@@ -255,10 +333,11 @@
 
 		if (player && volumePanel && volumeSlider) {
 			if (!player.isHookYoutubePlus) {
+				player.isHookYoutubePlus = true;
+
 				player.addEventListener("volumechange", () => {
 					setVolume();
 				});
-				player.isHookYoutubePlus = true;
 
 				if (functions.speedButton.enable) {
 					addSpeedButton();
@@ -268,6 +347,17 @@
 				}
 				if (functions.hidePiPButton.enable) {
 					hidePiPButton();
+				}
+			}
+
+			let comment = document.querySelector("ytd-comments #contents");
+			if (comment) {
+				if (!comment.isHookYoutubePlus_Comment) {
+					comment.isHookYoutubePlus_Comment = true;
+
+					if (functions.showNickname.enable) {
+						registerCommentWatcher();
+					}
 				}
 			}
 

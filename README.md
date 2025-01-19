@@ -1,20 +1,24 @@
 # YoutubePlus
+<img src="imgs/img.webp" alt="评论区用户名转换" width="500">
 
-优化Youtube的使用体验，目前实现了以下四个功能：
+优化Youtube的使用体验，目前实现了以下5个功能：
 - 优化音量条，将音量条拖到最大时音量真正为100%(关闭了Youtube的“音量均衡”)
 - 增加一键倍速按钮，不用再点好几次才能调到2倍速
 - 在开通Premium时，自动切换为Premium会员画质
 - 删除迷你播放器、剧场模式按钮
+- 自动将评论区的 `用户名(@username)` 转为 `昵称+用户名 (nickname @username)`
 
 以上功能均可单独开启或关闭。
 
 # 使用
-
 请自行百毒或者咕歌“油猴脚本如何安装”
 
 此处是安装链接: https://greasyfork.org/zh-CN/scripts/486375
 
 # 功能
+## 评论区用户名转换
+<img src="imgs/showNickname.webp" alt="评论区用户名转换" width="700">
+
 ## 优化音量条
 <img src="imgs/maxVolume.gif" alt="优化音量条" height="48">
 
@@ -40,6 +44,10 @@ Youtube播放器的音量条拖到最大的实际音量值为优化后的结果�
 这两个废物按钮反正笔者除了误点以外一次都没点过。
 
 # 更新日志
+2025-01-19.3：
+- 修复开启会员画质后加载视频后设定菜单不会消失的bug
+- 增加评论区用户名转换功能
+
 2025-01-19：
 - 插件改名YoutubePlus(原名Youtube真正100%音量/Youtube-Bomb)
 - 增加一键倍速按钮
