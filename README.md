@@ -1,5 +1,5 @@
 # YoutubePlus
-<img src="imgs/img.webp" alt="评论区用户名转换" width="500">
+<img src="imgs/img.webp" width="500">
 
 优化Youtube的使用体验，目前实现了以下5个功能：
 - 优化音量条，将音量条拖到最大时音量真正为100%(关闭了Youtube的“音量均衡”)
@@ -20,7 +20,7 @@
 <img src="imgs/showNickname.webp" alt="评论区用户名转换" width="700">
 
 ## 优化音量条
-<img src="imgs/maxVolume.gif" alt="优化音量条" height="48">
+<img src="imgs/maxVolume.gif" alt="优化音量条" height="48" width="164">
 
 Youtube播放器的音量条拖到最大的实际音量值为优化后的结果，并不是100%。
 
@@ -29,9 +29,9 @@ Youtube播放器的音量条拖到最大的实际音量值为优化后的结果�
 （注：请谨慎使用本脚本，注意用耳健康。Youtube这样做是为了保证每个视频的音量均衡，部分视频可能并不适合使用此脚本的方法暴力提升至100%）
 
 ## 一键倍速按钮
-<img src="imgs/speedButton.gif" alt="一键倍速按钮" height="48">
+<img src="imgs/speedButton.gif" alt="一键倍速按钮" height="48" width="216">
 
-增加了四个按钮：0.5x、1.5x、2x、2.5x，点击即可切换倍速。
+增加了5个按钮：0.5x、1x、1.5x、2x、3x(需单独开启)，点击即可切换倍速。
 
 ## 自动切换Premium画质
 <img src="imgs/premiumQuality.webp" alt="自动切换Premium画质" width="300">
@@ -39,11 +39,16 @@ Youtube播放器的音量条拖到最大的实际音量值为优化后的结果�
 开通Premium时，自动切换为Premium会员画质，不用每次手动点击
 
 ## 删除迷你播放器、剧场模式按钮
-<img src="imgs/removePiP.webp" alt="删除迷你播放器、剧场模式按钮" height="48">
+<img src="imgs/removePiP.webp" alt="删除迷你播放器、剧场模式按钮" height="48" width="200">
 
 这两个废物按钮反正笔者除了误点以外一次都没点过。
 
 # 更新日志
+2025-01-24：
+- 修复会员画质兼容性问题
+- 修复删除迷你播放器、剧场模式按钮功能失效问题
+- 增加3x倍速按钮
+
 2025-01-19.3：
 - 修复开启会员画质后加载视频后设定菜单不会消失的bug
 - 增加评论区用户名转换功能

@@ -2,7 +2,7 @@
 // @name         YoutubePlus - 100%音量增强/一键倍速按钮/自动切换Premium画质/删除迷你播放器按钮
 // @namespace    https://github.com/xlch88/YoutubePlus
 // @author       Dark495 (https://dark495.me/)
-// @version      2025-01-19.3
+// @version      2025-01-24
 // @license      WTFPL
 // @description  增强Youtube使用体验
 // @author       Dark495
@@ -31,6 +31,10 @@
 		speedButton: {
 			name: "一键倍速按钮",
 			enable: true,
+		},
+		speed3Button: {
+			name: "3倍速按钮(需先开启倍速按钮)",
+			enable: false,
 		},
 		premiumQuality: {
 			name: "自动切换会员画质",
@@ -63,7 +67,7 @@
 					insert: true,
 					setParent: true,
 				});
-			})
+			}),
 		);
 
 		for (const [key, info] of Object.entries(functions)) {
@@ -93,6 +97,14 @@
 				}
 				break;
 
+			case "speed3Button":
+				if (functions.speed3Button.enable) {
+					document.body.classList.add("ytp-show-speed3button");
+				} else {
+					document.body.classList.remove("ytp-show-speed3button");
+				}
+				break;
+
 			case "premiumQuality":
 				if (functions.premiumQuality.enable) {
 					switchToPremiumQuality();
@@ -103,9 +115,7 @@
 				if (functions.hidePiPButton.enable) {
 					hidePiPButton();
 				} else {
-					document.querySelector(".ytp-pip-button").style.display = "";
-					document.querySelector(".ytp-miniplayer-button").style.display = "";
-					document.querySelector(".ytp-size-button").style.display = "";
+					document.body.classList.remove("ytp-hide-pip-button");
 				}
 				break;
 
@@ -171,12 +181,24 @@
 			span.ytp-speed-button-2x::after{
 				content: "2x";
 			}
+			span.ytp-speed-button-3x{
+				display: none;
+			}
+			span.ytp-speed-button-3x::after{
+				content: "3x";
+			}
 			
 			.yt-plus-nickname{ color: #0f0f0f; }
 			.yt-plus-username{ color: rgba(0, 0, 0, 0.4); margin-left: 5px; }
 			ytd-author-comment-badge-renderer[creator] .yt-plus-nickname{ color:unset; }
 			ytd-author-comment-badge-renderer[creator] .yt-plus-username{ color:unset; opacity: 0.4; }
+			
+			body.ytp-hide-pip-button .ytp-pip-button{ display:none!important; }
+			body.ytp-hide-pip-button .ytp-miniplayer-button{ display:none!important; }
+			body.ytp-hide-pip-button .ytp-size-button{ display:none!important; }
+			body.ytp-show-speed3button .ytp-speed-button-3x{ display:flex; }
 		`;
+
 		document.head.appendChild(style);
 	}
 
@@ -239,9 +261,7 @@
 	}
 
 	function hidePiPButton() {
-		document.querySelector(".ytp-pip-button").style.display = "none";
-		document.querySelector(".ytp-miniplayer-button").style.display = "none";
-		document.querySelector(".ytp-size-button").style.display = "none";
+		document.body.classList.add("ytp-hide-pip-button");
 	}
 
 	function setVolume() {
@@ -259,34 +279,34 @@
 	}
 
 	function switchToPremiumQuality() {
-		function openQualityList() {
-			if (document.querySelector(".ytp-settings-shown")) {
-				document.querySelector(".ytp-settings-button").click();
-				document.querySelector(".ytp-settings-button").click();
-			} else {
-				document.querySelector(".ytp-settings-button").click();
-			}
+		const qualityList = [];
+		if (unsafeWindow?.ytInitialPlayerResponse?.playabilityStatus?.paygatedQualitiesMetadata?.qualityDetails) {
+			unsafeWindow.ytInitialPlayerResponse.playabilityStatus.paygatedQualitiesMetadata.qualityDetails.forEach((v) => {
+				qualityList.push(v.key);
+			});
 
+			console.log("[YoutubePlus]", "获取到会员画质列表:", qualityList);
+		} else {
+			console.log("[YoutubePlus]", "此视频无会员画质或未开通会员。");
+		}
+
+		const nowQuality = document.querySelector("#movie_player").getPlaybackQualityLabel().replace(" Premium", ""); // 嗯，会骗，实际上根本就没切
+		console.log("[YoutubePlus]", "当前画质:", nowQuality);
+		if (qualityList.includes(`${nowQuality} Premium`)) {
+			document.querySelector(".ytp-settings-button").click();
 			if (!document.querySelector(".ytp-quality-menu")) {
 				document.querySelector(".ytp-panel-menu .ytp-menuitem:last-of-type").click();
 			}
-		}
 
-		openQualityList();
-		const qualityList = {};
-		document.querySelector(".ytp-quality-menu .ytp-panel-menu").childNodes.forEach((v, i) => {
-			const name = v.querySelector("span").firstChild.textContent.trim();
+			const qualityList = {};
+			document.querySelector(".ytp-quality-menu .ytp-panel-menu").childNodes.forEach((v, i) => {
+				const name = v.querySelector("span").firstChild.textContent.trim();
 
-			qualityList[name] = i;
-		});
+				qualityList[name] = i;
+			});
 
-		const nowQuality = document.querySelector("#movie_player").getPlaybackQualityLabel();
-		if (!nowQuality.includes("Premium") && Object.keys(qualityList).includes(`${nowQuality} Premium`)) {
-			openQualityList();
 			document.querySelector(".ytp-quality-menu .ytp-panel-menu").childNodes[qualityList[`${nowQuality} Premium`]].click();
-		} else {
-			document.querySelector(".ytp-settings-button").click();
-			if (document.querySelector(".ytp-tooltip")) document.querySelector(".ytp-tooltip").style.display = "none";
+			console.log("[YoutubePlus]", "切换到画质:", `${nowQuality} Premium`);
 		}
 	}
 
@@ -302,19 +322,26 @@
 		const speedButtonDiv = document.createElement("div");
 		speedButtonDiv.className = "ytp-speed-button";
 		const speedButtons = [];
-		for (let speed of [0.5, 1, 1.5, 2]) {
+		for (let speed of [0.5, 1, 1.5, 2, 3]) {
 			const speedButton = document.createElement("span");
 			speedButton.className = `ytp-speed-button ytp-speed-button-${speed.toString().replace(".", "")}x`;
 			speedButtonDiv.appendChild(speedButton);
 			speedButton.onclick = () => {
-				document.querySelector("#movie_player").setPlaybackRate(speed);
-				sessionStorage.setItem(
-					"yt-player-playback-rate",
-					JSON.stringify({
-						data: speed.toString(),
-						creation: new Date().getTime(),
-					})
-				);
+				if (speed > 2) {
+					player.playbackRate = speed;
+					console.log("[YoutubePlus]", "超级倍速:", speed);
+				} else {
+					player.playbackRate = speed; // 设置为3倍速后需要用这个还原
+					console.log("[YoutubePlus]", "普通倍速:", speed);
+					document.querySelector("#movie_player").setPlaybackRate(speed);
+					sessionStorage.setItem(
+						"yt-player-playback-rate",
+						JSON.stringify({
+							data: speed.toString(),
+							creation: new Date().getTime(),
+						}),
+					);
+				}
 				speedButtons.forEach((v) => {
 					v.classList.remove("ytp-speed-button-active");
 				});
@@ -347,6 +374,9 @@
 				}
 				if (functions.hidePiPButton.enable) {
 					hidePiPButton();
+				}
+				if (functions.speed3Button.enable) {
+					document.body.classList.add("ytp-show-speed3button");
 				}
 			}
 
