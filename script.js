@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         YoutubePlus - 100%音量增强/一键倍速按钮/自动切换Premium画质/删除迷你播放器按钮
+// @name         YoutubePlus - 显评论昵称/100%音量增强/一键倍速按钮/自动切换Premium画质/删除迷你播放器按钮
 // @namespace    https://github.com/xlch88/YoutubePlus
 // @author       Dark495 (https://dark495.me/)
-// @version      2025-01-24
+// @version      2025-02-18
 // @license      WTFPL
 // @description  增强Youtube使用体验
 // @author       Dark495
@@ -48,6 +48,10 @@
 			name: "显示评论者昵称",
 			enable: true,
 		},
+		hideCeElement: {
+			name: "半透明结尾的推荐视频/作者",
+			enable: true,
+		},
 	};
 	let menuIds = [];
 	for (const key of Object.keys(functions)) {
@@ -67,7 +71,7 @@
 					insert: true,
 					setParent: true,
 				});
-			}),
+			})
 		);
 
 		for (const [key, info] of Object.entries(functions)) {
@@ -126,6 +130,15 @@
 					commentWatcher.disconnect();
 					commentWatcher = null;
 				}
+				break;
+
+			case "hideCeElement":
+				if (functions.hideCeElement.enable) {
+					document.body.classList.add("ytp-hide-ce-element");
+				} else {
+					document.body.classList.remove("ytp-hide-ce-element");
+				}
+				break;
 		}
 
 		registerMenu();
@@ -197,8 +210,10 @@
 			body.ytp-hide-pip-button .ytp-miniplayer-button{ display:none!important; }
 			body.ytp-hide-pip-button .ytp-size-button{ display:none!important; }
 			body.ytp-show-speed3button .ytp-speed-button-3x{ display:flex; }
-		`;
 
+            body.ytp-hide-ce-element .ytp-ce-element{ opacity: 0.3!important; }
+            body.ytp-hide-ce-element .ytp-ce-element.ytp-ce-element-hover{ opacity: 1!important; }
+		`;
 		document.head.appendChild(style);
 	}
 
@@ -339,7 +354,7 @@
 						JSON.stringify({
 							data: speed.toString(),
 							creation: new Date().getTime(),
-						}),
+						})
 					);
 				}
 				speedButtons.forEach((v) => {
@@ -377,6 +392,9 @@
 				}
 				if (functions.speed3Button.enable) {
 					document.body.classList.add("ytp-show-speed3button");
+				}
+				if (functions.hideCeElement.enable) {
+					document.body.classList.add("ytp-hide-ce-element");
 				}
 			}
 
