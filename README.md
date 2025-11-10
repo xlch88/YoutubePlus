@@ -1,3 +1,9 @@
+# 此仓库已停止更新
+
+**此脚本已转为扩展程序继续开发：**
+
+https://github.com/xlch88/YoutubeTweak
+
 # YoutubePlus
 <img src="imgs/img.webp" alt="图" width="500">
 
